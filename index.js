@@ -19,15 +19,34 @@ const knexConfig = {
 const db = knex(knexConfig);
 // endpoints here
 
-router.get("/", (req, res) => {
-  db("roles");
-  // get the roles from the database
-  res.send("Write code to retrieve all roles");
+// (Get - zoos)
+server.get("/api/zoos", (req, res) => {
+  db("zoos")
+    .then(zoos => {
+      res.status(201).json(zoos);
+    })
+    .catch(error => {
+      res
+        .status(404)
+        .json({ error: "Unable to retrieve the specified request." });
+    });
 });
 
-router.get("/:id", (req, res) => {
-  // retrieve a role by id
-  res.send("Write code to retrieve a role by id");
+// (Get - zoos by id)
+server.get("/api/zoos/:id", (req, res) => {
+  db("zoos")
+    .where({ id: req.params.id })
+    .first()
+    .then(zoo => {
+      if (zoo) {
+        res.status(201).json(zoo);
+      } else {
+        res.status(404).json({ message: "Zoo not found." });
+      }
+    })
+    .catch(error => {
+      res.status(404).json({ error: "The specified id does not exists." });
+    });
 });
 
 router.post("/", (req, res) => {
