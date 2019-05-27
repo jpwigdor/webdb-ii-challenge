@@ -6,8 +6,8 @@ const knexConfig = {
   connection: {
     filename: "./data/lambda.sqlite3" //from the root folder
   },
-  useNullAsDefault: true,
-  debug: true
+  useNullAsDefault: true
+  // debug: true
 };
 const db = knex(knexConfig);
 
@@ -23,12 +23,12 @@ router.get("/", (req, res) => {
     .catch(error => {
       res
         .status(404)
-        .json({ error: "Unable to retrieve the specified request." });
+        .json({ error, error: "Unable to retrieve the specified request." });
     });
 });
 
 // (Get - zoos by id)
-router.get("/api/zoos/:id", (req, res) => {
+router.get("/:id", (req, res) => {
   db("zoos")
     .where({ id: req.params.id })
     .first()
@@ -40,7 +40,9 @@ router.get("/api/zoos/:id", (req, res) => {
       }
     })
     .catch(error => {
-      res.status(404).json({ error: "The specified id does not exists." });
+      res
+        .status(404)
+        .json({ error, error: "The specified id does not exists." });
     });
 });
 
@@ -48,8 +50,16 @@ router.get("/api/zoos/:id", (req, res) => {
 router.post("/", (req, res) => {
   db("zoos")
     .insert(req.body, "id")
-    .then(results => {
-      res.status(201).json(results);
+    .then(ids => {
+      return db("zoos")
+        .where({ id: ids[0] })
+        .first()
+        .then(results => {
+          res.status(201).json(results);
+        })
+        .catch(err => {
+          res.status(500).json(err);
+        });
     })
     .catch(err => {
       res.status(500).json({ message: "Some useful error message" });
@@ -57,8 +67,22 @@ router.post("/", (req, res) => {
 });
 
 router.put("/:id", (req, res) => {
-  // update roles
-  res.send("Write code to modify a role");
+  // filter and then update!
+  db("zoos")
+    .where({ id: req.params.id })
+    .update(req.body)
+    .then(count => {
+      if (count > 0) {
+        res.status(200).json({
+          message: `${count} ${count > 1 ? "records" : "record"} updated`
+        });
+      } else {
+        res.status(404).json({ message: "Zoo does not exist" });
+      }
+    })
+    .catch(err => {
+      res.status(500).json(err);
+    });
 });
 
 router.delete("/:id", (req, res) => {
