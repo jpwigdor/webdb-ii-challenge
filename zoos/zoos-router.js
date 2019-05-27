@@ -13,6 +13,26 @@ const db = knex(knexConfig);
 
 // endpoints here
 
+// POST
+router.post("/", (req, res) => {
+  db("zoos")
+    .insert(req.body, "id")
+    .then(ids => {
+      return db("zoos")
+        .where({ id: ids[0] })
+        .first()
+        .then(results => {
+          res.status(201).json(results);
+        })
+        .catch(err => {
+          res.status(500).json(err);
+        });
+    })
+    .catch(err => {
+      res.status(500).json({ message: "Some useful error message" });
+    });
+});
+
 // (Get - zoos)
 router.get("/", (req, res) => {
   db("zoos")
@@ -46,23 +66,22 @@ router.get("/:id", (req, res) => {
     });
 });
 
-// POST
-router.post("/", (req, res) => {
+router.delete("/:id", (req, res) => {
+  //filter then delete!
   db("zoos")
-    .insert(req.body, "id")
-    .then(ids => {
-      return db("zoos")
-        .where({ id: ids[0] })
-        .first()
-        .then(results => {
-          res.status(201).json(results);
-        })
-        .catch(err => {
-          res.status(500).json(err);
+    .where({ id: req.params.id })
+    .del()
+    .then(count => {
+      if (count > 0) {
+        res.status(200).json({
+          message: `${count} ${count > 1 ? "records" : "record"} deleted`
         });
+      } else {
+        res.status(404).json({ message: "Zoo does not exist" });
+      }
     })
     .catch(err => {
-      res.status(500).json({ message: "Some useful error message" });
+      res.status(500).json(err);
     });
 });
 
@@ -75,25 +94,6 @@ router.put("/:id", (req, res) => {
       if (count > 0) {
         res.status(200).json({
           message: `${count} ${count > 1 ? "records" : "record"} updated`
-        });
-      } else {
-        res.status(404).json({ message: "Zoo does not exist" });
-      }
-    })
-    .catch(err => {
-      res.status(500).json(err);
-    });
-});
-
-router.delete("/:id", (req, res) => {
-  //filter then delete!
-  db("zoos")
-    .where({ id: req.params.id })
-    .del()
-    .then(count => {
-      if (count > 0) {
-        res.status(200).json({
-          message: `${count} ${count > 1 ? "records" : "record"} deleted`
         });
       } else {
         res.status(404).json({ message: "Zoo does not exist" });
