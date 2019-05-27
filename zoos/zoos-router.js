@@ -86,8 +86,22 @@ router.put("/:id", (req, res) => {
 });
 
 router.delete("/:id", (req, res) => {
-  // remove roles (inactivate the role)
-  res.send("Write code to remove a role");
+  //filter then delete!
+  db("zoos")
+    .where({ id: req.params.id })
+    .del()
+    .then(count => {
+      if (count > 0) {
+        res.status(200).json({
+          message: `${count} ${count > 1 ? "records" : "record"} deleted`
+        });
+      } else {
+        res.status(404).json({ message: "Zoo does not exist" });
+      }
+    })
+    .catch(err => {
+      res.status(500).json(err);
+    });
 });
 
 module.exports = router;
