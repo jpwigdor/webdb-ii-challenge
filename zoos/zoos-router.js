@@ -15,22 +15,26 @@ const db = knex(knexConfig);
 
 // POST
 router.post("/", (req, res) => {
-  db("zoos")
-    .insert(req.body, "id")
-    .then(ids => {
-      return db("zoos")
-        .where({ id: ids[0] })
-        .first()
-        .then(results => {
-          res.status(201).json(results);
-        })
-        .catch(err => {
-          res.status(500).json(err);
-        });
-    })
-    .catch(err => {
-      res.status(500).json({ message: "Some useful error message" });
-    });
+  if (!req.body.name) {
+    res.status(400).json({ message: "Please provide a name" });
+  } else {
+    db("zoos")
+      .insert(req.body, "id")
+      .then(ids => {
+        return db("zoos")
+          .where({ id: ids[0] })
+          .first()
+          .then(results => {
+            res.status(201).json(results);
+          })
+          .catch(err => {
+            res.status(500).json(err);
+          });
+      })
+      .catch(err => {
+        res.status(500).json({ message: "Some useful error message" });
+      });
+  }
 });
 
 // (Get - zoos)
